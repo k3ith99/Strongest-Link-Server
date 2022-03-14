@@ -89,7 +89,14 @@ class Game {
     }
     
     joinGame(user){
-
+        return new Promise(async (resolve, reject) => {
+            try {
+                //get more questions from trivia db
+                this.players.push(user);
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 
     delete(){
