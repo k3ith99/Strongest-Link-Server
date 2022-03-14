@@ -9,7 +9,7 @@ class Game {
     }
 
     static get all() {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
                 const games = gamesData.map(game => new Game(game));
                 resolve(games);
@@ -20,7 +20,7 @@ class Game {
     }
 
     static findById(id) {
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
                 const gameData = gamesData.find(game => game.id === id);
                 if(!gameData) throw new Error("Game not found.");
@@ -43,7 +43,7 @@ class Game {
     }
 
     static createGame(name, host, options){
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
                 const nameExists = !!gamesData.find(game => game.name === name);
                 if(nameExists) throw new Error("Sorry that room name is taken.");
@@ -124,7 +124,7 @@ class Game {
     }
 
     delete(){
-        return new Promise(async (resolve, reject) => {
+        return new Promise((resolve, reject) => {
             try {
                 const index = gamesData(game => game.id === this.id);
                 if(index < 0) throw new Error("Game no longer exists.");
