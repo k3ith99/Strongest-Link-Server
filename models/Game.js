@@ -30,8 +30,33 @@ class Game {
         });
     }
 
-    static createGame(){
+    static createGame(name, host, options){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const nameExists = !!gamesData.find(game => game.name === name);
+                if(nameExists) throw new Error("Sorry that room name is taken.");
 
+                const maxId = Math.max(...gamesData.map(game => game.id));
+                const newId = maxId < 0 ? 0 : maxId + 1;
+
+                const newGame = {
+                    id: newId,
+                    name,
+                    options,
+                    host,
+                    players: [host],
+                    questions: null,
+                    scores: {},
+                    turn: 0,
+                    round: 0
+                };
+
+                gamesData.push(newGame);
+                resolve(new Game(newGame));
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 
     updateOptions(){
