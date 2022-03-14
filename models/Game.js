@@ -20,7 +20,14 @@ class Game {
     }
 
     static get leaderboard() {
-        
+        return new Promise(async (resolve, reject) => {
+            try {
+                // db request to get scores
+                resolve(1);
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 
     static createGame(){
