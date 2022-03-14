@@ -9,7 +9,14 @@ class Game {
     }
 
     static get all() {
-        
+        return new Promise(async (resolve, reject) => {
+            try {
+                const games = gamesData.map(game => new Game(game));
+                resolve(games);
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 
     static get leaderboard() {
