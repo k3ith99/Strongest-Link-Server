@@ -1,4 +1,5 @@
 const axios = require("axios");
+const db = require("../dbConfig");
 const gamesData = [];
 
 class Game {
@@ -36,7 +37,9 @@ class Game {
         return new Promise(async (resolve, reject) => {
             try {
                 // db request to get scores
-                resolve(1);
+                const highscores = await db.query("SELECT * FROM highscores ORDER BY highscore DESC;");
+                if(!highscores) throw new Error("Could not get highscores.");
+                resolve(highscores.rows);
             } catch (err) {
                 reject(err);
             }
