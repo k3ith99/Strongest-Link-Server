@@ -19,6 +19,18 @@ class Game {
         });
     }
 
+    static findById(id) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const gameData = gamesData.find(game => game.id === id);
+                if(!gameData) throw new Error("Game not found.");
+                resolve(new Game(gameData));
+            } catch (err) {
+                reject(err);
+            }
+        });
+    };
+
     static get leaderboard() {
         return new Promise(async (resolve, reject) => {
             try {
