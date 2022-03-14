@@ -1,3 +1,4 @@
+const axios = require("axios");
 const gamesData = [];
 
 class Game {
@@ -58,10 +59,12 @@ class Game {
                     host,
                     players: [host],
                     questions: null,
+                    token: null,
                     currentQuestion: 0,
                     scores: {},
                     turn: 0,
-                    round: 0
+                    round: 0,
+                    active: false
                 };
 
                 gamesData.push(newGame);
@@ -76,10 +79,39 @@ class Game {
         this.options = newOptions;
     }
 
+    getToken(){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const { data } = await axios.get("https://opentdb.com/api_token.php?command=request");
+                if(data.response_code !== 0) throw new Error("Couldn't generate session token.");
+                resolve(data.token);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    getQuestions(amount){
+        return new Promise(async (resolve, reject) => {
+            try {
+                if(!this.token) throw new Error("Couldn't get trivia data (missing token).");
+                const { data } = await axios.get(`https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}`);
+                if(data.response_code !== 0) throw new Error("Couldn't get trivia data.");
+                resolve(data.results);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
     startGame(){
         return new Promise(async (resolve, reject) => {
             try {
                 // trivia api request
+                this.token = await this.getToken();
+                this.questions = await this.getQuestions(this.players.length * this.options.totalRounds);
+
+                this.currentQuestion = 0;
                 this.turn = 0;
                 this.round = 0;
                 resolve(this);
@@ -92,7 +124,11 @@ class Game {
     joinGame(user){
         return new Promise(async (resolve, reject) => {
             try {
-                //get more questions from trivia db
+                if(this.active){
+                    //get more questions from trivia db
+                    const newQuestions = await this.getQuestions(this.options.totalRounds);
+                    this.questions = [...this.questions, ...newQuestions];
+                }
                 this.players.push(user);
             } catch (err) {
                 reject(err);
