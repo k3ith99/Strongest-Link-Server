@@ -100,6 +100,15 @@ class Game {
     }
 
     delete(){
-
+        return new Promise(async (resolve, reject) => {
+            try {
+                const index = gamesData(game => game.id === this.id);
+                if(index < 0) throw new Error("Game no longer exists.");
+                gamesData.splice(index, 1);
+                resolve("Game successfully deleted.");
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
 }
