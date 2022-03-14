@@ -58,6 +58,7 @@ class Game {
                     host,
                     players: [host],
                     questions: null,
+                    currentQuestion: 0,
                     scores: {},
                     turn: 0,
                     round: 0
@@ -93,6 +94,29 @@ class Game {
             try {
                 //get more questions from trivia db
                 this.players.push(user);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    makeTurn(user, answer) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if(players[turn] !== user) throw new Error("It's not your turn.");
+                let correct = false;
+                let gameEnd = false;
+                const question = this.questions[this.currentQuestion];
+                if(question.correct_answer === answer){
+                    this.scores[user] += 1;
+                    correct = true;
+                }
+                this.turn += 1;
+                this.turn %= this.players.length;
+                if(this.turn === 0) this.round += 1;
+                if(this.round > this.options.totalRounds) gameEnd = true;
+                if(!gameEnd) this.currentQuestion += 1;
+                resolve({ gameEnd, correct });
             } catch (err) {
                 reject(err);
             }
