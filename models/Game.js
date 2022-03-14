@@ -76,7 +76,16 @@ class Game {
     }
 
     startGame(){
-
+        return new Promise(async (resolve, reject) => {
+            try {
+                // trivia api request
+                this.turn = 0;
+                this.round = 0;
+                resolve(this);
+            } catch (err) {
+                reject(err);
+            }
+        });
     }
     
     joinGame(user){
