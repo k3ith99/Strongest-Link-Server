@@ -59,8 +59,8 @@ class Game {
         });
     }
 
-    updateOptions(){
-        
+    updateOptions(newOptions){
+        this.options = newOptions;
     }
 
     startGame(){
