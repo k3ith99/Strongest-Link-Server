@@ -156,10 +156,35 @@ class Game {
                 if(this.round > this.options.totalRounds) gameEnd = true;
                 if(gameEnd) {
                     // send scores to DB
+                    await this.updateScores();
                 } else {
                     this.currentQuestion += 1;
                 }
                 resolve({ gameEnd, correct });
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    updateScores(){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const highscores = await db.query("SELECT * FROM highscores;");
+                for(const user in this.scores){
+                    const score = this.scores[user];
+                    if(score > 0) {
+                        const userRow = highscores.rows.find(row => row.name === user);
+                        if(userRow){
+                            if(score > userRow.highscore){
+                                await db.query("UPDATE highscores SET highscore=$1 WHERE name=$2", [score, user]);
+                            }
+                        } else {
+                            await db.query("INSERT INTO highscores (name, highscore) VALUES ($1, $2)", [user, score]);
+                        }
+                    }
+                }
+                resolve("Leaderboards updated.");
             } catch (err) {
                 reject(err);
             }
