@@ -115,7 +115,11 @@ class Game {
                 this.turn %= this.players.length;
                 if(this.turn === 0) this.round += 1;
                 if(this.round > this.options.totalRounds) gameEnd = true;
-                if(!gameEnd) this.currentQuestion += 1;
+                if(gameEnd) {
+                    // send scores to DB
+                } else {
+                    this.currentQuestion += 1;
+                }
                 resolve({ gameEnd, correct });
             } catch (err) {
                 reject(err);
