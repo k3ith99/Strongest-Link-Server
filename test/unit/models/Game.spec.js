@@ -87,10 +87,10 @@ describe("Game Model", () => {
     };
 
     const testLeaderboard = [
-        {id: 0, name: "test_user3", highscore: 7},
-        {id: 0, name: "test_user4", highscore: 4},
-        {id: 0, name: "test_user2", highscore: 3},
-        {id: 0, name: "test_user", highscore: 1}
+        {id: 3, name: "test_user3", highscore: 7},
+        {id: 4, name: "test_user4", highscore: 4},
+        {id: 2, name: "test_user2", highscore: 3},
+        {id: 1, name: "test_user", highscore: 1}
     ];
 
     let gameInstance;
