@@ -145,7 +145,7 @@ class Game {
   makeTurn(user, answer) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (players[turn] !== user) throw new Error("It's not your turn.");
+        if (this.players[this.currentQuestion % this.players.length] !== user) throw new Error("It's not your turn.");
         let correct = false;
         let gameEnd = false;
         const question = this.questions[this.currentQuestion];
