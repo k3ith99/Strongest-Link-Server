@@ -1,29 +1,27 @@
-const express = require("express");
-const router = express.Router();
 const Game = require("../Models/Game");
 
-//games index
-router.get("/", async (req, res) => {
-  try {
-    const games = await Game.all;
-    res.status(200).json(games);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-});
-
 //get leaderboard
-router.get("/leaderboard", async (req, res) => {
+async function leaderboard(req, res) {
   try {
     const leaderboard = await Game.leaderboard;
     res.status(200).json(leaderboard);
   } catch (err) {
     res.status(500).json(err);
   }
-});
+}
+
+//games index
+async function index(req, res) {
+  try {
+    const games = await Game.all;
+    res.status(200).json(games);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+}
 
 //create lobby
-router.post("/", async (req, res) => {
+async function create(req, res) {
   try {
     const lobbyName = req.body.name;
     const hostUsername = req.body.host;
@@ -36,10 +34,10 @@ router.post("/", async (req, res) => {
   } catch (err) {
     res.status(500).json(err);
   }
-});
+}
 
 //join lobby
-router.post("/:id", async (req, res) => {
+async function join(req, res) {
   try {
     const game = await Game.findById(req.params.id);
     await game.joinGame(req.body.username);
@@ -47,10 +45,10 @@ router.post("/:id", async (req, res) => {
   } catch (err) {
     res.status(404).json(err);
   }
-});
+}
 
 //restart game
-router.post("/:id/restart", async (req, res) => {
+async function restart(req, res) {
   try {
     const game = await Game.findById(req.params.id).updateOptions(
       req.body.options
@@ -61,15 +59,17 @@ router.post("/:id/restart", async (req, res) => {
   } catch (err) {
     res.status(500).json(err);
   }
-});
+}
 
-router.delete("/:id", async (req, res) => {
+async function deleteGame(req, res) {
   try {
     await Game.findById(req.params.id).delete();
     res.status(200).json("Game ended");
   } catch (err) {
     res.status(500).json(err);
   }
-});
+}
 
-module.exports = router;
+module.exports = {
+  leaderboard, index, create, join, restart, deleteGame
+};

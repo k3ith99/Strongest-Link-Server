@@ -4,7 +4,7 @@ const cors = require("cors");
 app.use(cors());
 app.use(express.json());
 
-const gameRoutes = require("./controller/gameController");
+const gameRoutes = require("./routes/gamesRoutes");
 
 app.use("/games", gameRoutes);
 
