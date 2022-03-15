@@ -67,8 +67,6 @@ class Game {
           token: null,
           currentQuestion: 0,
           scores: {},
-          turn: 0,
-          round: 0,
           active: false
         };
 
@@ -105,7 +103,7 @@ class Game {
         if (!this.token)
           throw new Error("Couldn't get trivia data (missing token).");
         const { data } = await axios.get(
-          `https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}`
+          `https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}&encode=url3986`
         );
         if (data.response_code !== 0)
           throw new Error("Couldn't get trivia data.");
@@ -122,12 +120,14 @@ class Game {
         // trivia api request
         this.token = await this.getToken();
         this.questions = await this.getQuestions(
-          this.players.length * this.options.totalRounds
+          this.options.totalQuestions
         );
-
+        
+        this.players.forEach(player => {
+          this.scores[player] = 0;
+        });
         this.currentQuestion = 0;
-        this.turn = 0;
-        this.round = 0;
+        this.active = true;
         resolve(this);
       } catch (err) {
         reject(err);
@@ -138,13 +138,6 @@ class Game {
   joinGame(user) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (this.active) {
-          //get more questions from trivia db
-          const newQuestions = await this.getQuestions(
-            this.options.totalRounds
-          );
-          this.questions = [...this.questions, ...newQuestions];
-        }
         this.players.push(user);
       } catch (err) {
         reject(err);
@@ -155,21 +148,18 @@ class Game {
   makeTurn(user, answer) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (players[turn] !== user) throw new Error("It's not your turn.");
+        if (!this.active) throw new Error("Game is no longer in progress.");
+        if (this.players[this.currentQuestion % this.players.length] !== user) throw new Error("It's not your turn.");
         let correct = false;
         let gameEnd = false;
         const question = this.questions[this.currentQuestion];
-        if (question.correct_answer === answer) {
+        if (decodeURIComponent(question.correct_answer) === answer) {
           this.scores[user] += 1;
           correct = true;
         }
-        this.turn += 1;
-        this.turn %= this.players.length;
-        if (this.turn === 0) this.round += 1;
-        if (this.round > this.options.totalRounds) gameEnd = true;
+        if (this.currentQuestion >= this.options.totalQuestions - 1) gameEnd = true;
         if (gameEnd) {
-          // send scores to DB
-          await this.updateScores();
+          this.active = false;
         } else {
           this.currentQuestion += 1;
         }
@@ -213,7 +203,7 @@ class Game {
   delete() {
     return new Promise((resolve, reject) => {
       try {
-        const index = gamesData((game) => game.id === this.id);
+        const index = gamesData.findIndex((game) => game.id === this.id);
         if (index < 0) throw new Error("Game no longer exists.");
         gamesData.splice(index, 1);
         resolve("Game successfully deleted.");
@@ -223,3 +213,5 @@ class Game {
     });
   }
 }
+
+module.exports = Game;
