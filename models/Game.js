@@ -139,6 +139,7 @@ class Game {
     return new Promise(async (resolve, reject) => {
       try {
         this.players.push(user);
+        resolve(this);
       } catch (err) {
         reject(err);
       }
