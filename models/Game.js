@@ -122,7 +122,10 @@ class Game {
         this.questions = await this.getQuestions(
           this.options.totalQuestions
         );
-
+        
+        this.players.forEach(player => {
+          this.scores[player] = 0;
+        });
         this.currentQuestion = 0;
         this.active = true;
         resolve(this);
