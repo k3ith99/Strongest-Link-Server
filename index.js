@@ -7,6 +7,7 @@ const io = new Server(httpServer, {
     origin: "http://localhost:3000"
   }
 });
+const socketController = require("./controller/socketController");
 
 const port = process.env.PORT || 8000;
 
@@ -14,13 +15,4 @@ httpServer.listen(port, () => {
   console.log(`Express just departed from port ${port}!`);
 });
 
-io.on("connection", (socket) => {
-  console.log("User connected"); // runs when client first connects
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-
-  socket.on("message", (message) => {
-    console.log(message);
-  });
-});
+io.on("connection", socketController.respond); // runs when client first connects
