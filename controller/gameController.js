@@ -26,11 +26,8 @@ async function create(req, res) {
     const lobbyName = req.body.name;
     const hostUsername = req.body.host;
     const options = req.body.options;
-
     const game = await Game.createGame(lobbyName, hostUsername, options);
-    await game.startGame();
-    //start game via socketio
-    res.status(201).json("Game started");
+    res.status(201).json(game);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -41,7 +38,7 @@ async function join(req, res) {
   try {
     const game = await Game.findById(req.params.id);
     await game.joinGame(req.body.username);
-    //connect user to game via socketio
+    res.status(200).json(game);
   } catch (err) {
     res.status(404).json(err);
   }
@@ -50,12 +47,9 @@ async function join(req, res) {
 //restart game
 async function restart(req, res) {
   try {
-    const game = await Game.findById(req.params.id).updateOptions(
-      req.body.options
-    );
+    const game = await Game.findById(req.params.id);
     await game.startGame();
-    //start game via socketio
-    res.status(201).send("Game restarted");
+    res.status(200).json(game);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -63,8 +57,9 @@ async function restart(req, res) {
 
 async function deleteGame(req, res) {
   try {
-    await Game.findById(req.params.id).delete();
-    res.status(200).json("Game ended");
+    const game = await Game.findById(req.params.id);
+    await game.delete();
+    res.status(204).send();
   } catch (err) {
     res.status(500).json(err);
   }
