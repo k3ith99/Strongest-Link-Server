@@ -148,6 +148,7 @@ class Game {
   makeTurn(user, answer) {
     return new Promise(async (resolve, reject) => {
       try {
+        if (!this.active) throw new Error("Game is no longer in progress.");
         if (this.players[this.currentQuestion % this.players.length] !== user) throw new Error("It's not your turn.");
         let correct = false;
         let gameEnd = false;
