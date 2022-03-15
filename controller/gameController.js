@@ -35,33 +35,48 @@ async function create(req, res) {
 
 //join lobby
 async function join(req, res) {
+  let errorStatus;
   try {
+    errorStatus = 404;
     const game = await Game.findById(req.params.id);
+
+    errorStatus = 500;
     await game.joinGame(req.body.username);
+
     res.status(200).json(game);
   } catch (err) {
-    res.status(404).json(err);
+    res.status(errorStatus).json(err);
   }
 }
 
 //restart game
 async function restart(req, res) {
+  let errorStatus;
   try {
+    errorStatus = 404;
     const game = await Game.findById(req.params.id);
+
+    errorStatus = 500;
     await game.startGame();
+
     res.status(200).json(game);
   } catch (err) {
-    res.status(500).json(err);
+    res.status(errorStatus).json(err);
   }
 }
 
 async function deleteGame(req, res) {
+  let errorStatus;
   try {
+    errorStatus = 404;
     const game = await Game.findById(req.params.id);
+
+    errorStatus = 500;
     await game.delete();
+
     res.status(204).send();
   } catch (err) {
-    res.status(500).json(err);
+    res.status(errorStatus).json(err);
   }
 }
 
