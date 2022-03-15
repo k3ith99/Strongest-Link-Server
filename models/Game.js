@@ -67,8 +67,6 @@ class Game {
           token: null,
           currentQuestion: 0,
           scores: {},
-          turn: 0,
-          round: 0,
           active: false
         };
 
@@ -122,12 +120,11 @@ class Game {
         // trivia api request
         this.token = await this.getToken();
         this.questions = await this.getQuestions(
-          this.players.length * this.options.totalRounds
+          this.options.totalQuestions
         );
 
         this.currentQuestion = 0;
-        this.turn = 0;
-        this.round = 0;
+        this.active = true;
         resolve(this);
       } catch (err) {
         reject(err);
@@ -138,13 +135,6 @@ class Game {
   joinGame(user) {
     return new Promise(async (resolve, reject) => {
       try {
-        if (this.active) {
-          //get more questions from trivia db
-          const newQuestions = await this.getQuestions(
-            this.options.totalRounds
-          );
-          this.questions = [...this.questions, ...newQuestions];
-        }
         this.players.push(user);
       } catch (err) {
         reject(err);
@@ -163,10 +153,7 @@ class Game {
           this.scores[user] += 1;
           correct = true;
         }
-        this.turn += 1;
-        this.turn %= this.players.length;
-        if (this.turn === 0) this.round += 1;
-        if (this.round > this.options.totalRounds) gameEnd = true;
+        if (this.currentQuestion >= this.options.totalQuestions) gameEnd = true;
         if (gameEnd) {
           // send scores to DB
           await this.updateScores();
