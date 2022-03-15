@@ -156,7 +156,7 @@ class Game {
           this.scores[user] += 1;
           correct = true;
         }
-        if (this.currentQuestion >= this.options.totalQuestions) gameEnd = true;
+        if (this.currentQuestion >= this.options.totalQuestions - 1) gameEnd = true;
         if (gameEnd) {
           // send scores to DB
           await this.updateScores();
