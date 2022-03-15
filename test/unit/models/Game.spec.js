@@ -3,6 +3,11 @@ const Game = require("../../../models/Game");
 const axios = require("axios");
 jest.mock("axios");
 
+const pg = require("pg");
+jest.mock("pg");
+
+const db = require("../../../dbConfig");
+
 const sampleTokenResponse = {
     "response_code": 0,
     "response_message": "Token Generated Successfully!",
@@ -81,7 +86,24 @@ describe("Game Model", () => {
         active: false
     };
 
+    const testLeaderboard = [
+        {id: 0, name: "test_user3", highscore: 7},
+        {id: 0, name: "test_user4", highscore: 4},
+        {id: 0, name: "test_user2", highscore: 3},
+        {id: 0, name: "test_user", highscore: 1}
+    ];
+
     let gameInstance;
+
+    it("can get leaderboard data", async () => {
+        jest.spyOn(db, "query").mockResolvedValueOnce({
+            rows: testLeaderboard
+        });
+        const response = await Game.leaderboard;
+        expect(db.query).toHaveBeenCalled();
+        expect(db.query).toHaveBeenCalledWith("SELECT * FROM highscores ORDER BY highscore DESC");
+        expect(response).toEqual(testLeaderboard);
+    });
 
     it("can create a game", async () => {
         const game = await Game.createGame("test_name", "test_user", {...testOptions, level: "easy"});
@@ -167,30 +189,46 @@ describe("Game Model", () => {
         expect(gameInstance).toMatchObject(expectedGame);
     });
 
-    it("responds with the correct object on correct answer", async () => {
-        const response = await gameInstance.makeTurn("test_user", "Twilight Zone Tower of Terror");
-        expectedGame.scores["test_user"] = 2;
-        expectedGame.currentQuestion = 3;
-        expect(response).toMatchObject({
-            gameEnd: false, correct: true
-        });
-    });
-
     it("responds with the correct object on incorrect answer", async () => {
-        const response = await gameInstance.makeTurn("test_user2", "Hungarian");
-        expectedGame.currentQuestion = 4;
+        const response = await gameInstance.makeTurn("test_user", "Hungarian");
+        expectedGame.currentQuestion = 3;
         expect(response).toMatchObject({
             gameEnd: false, correct: false
         });
     });
 
+    it("responds with the correct object on correct answer", async () => {
+        const response = await gameInstance.makeTurn("test_user2", "Josh DeSeno");
+        expectedGame.scores["test_user2"] = 1;
+        expectedGame.currentQuestion = 4;
+        expect(response).toMatchObject({
+            gameEnd: false, correct: true
+        });
+    });
+
     it("has the correct response and game state on final turn", async () => {
-        const response = await gameInstance.makeTurn("test_user", "Hungarian");
+        const response = await gameInstance.makeTurn("test_user", "The Guggenheim");
+        expectedGame.scores["test_user"] = 2;
         expectedGame.active = false;
         expect(gameInstance).toMatchObject(expectedGame);
         expect(response).toMatchObject({
-            gameEnd: true, correct: false
+            gameEnd: true, correct: true
         });
+    });
+
+    it("can update the leaderboards", async () => {
+        db.query.mockClear();
+        jest.spyOn(db, "query").mockResolvedValueOnce({
+            rows: [
+                { id: 0, name: "test_user", highscore: 1 }
+            ]
+        });
+        const response = await gameInstance.updateScores();
+        expect(db.query).toHaveBeenCalledTimes(3);
+        expect(db.query).toHaveBeenNthCalledWith(1, "SELECT * FROM highscores")
+        expect(db.query).toHaveBeenNthCalledWith(2, "UPDATE highscores SET highscore=$1 WHERE name=$2", [2, "test_user"]);
+        expect(db.query).toHaveBeenNthCalledWith(3, "INSERT INTO highscores (name, highscore) VALUES ($1, $2)", ["test_user2", 1]);
+        expect(response).toBeTruthy();
     });
 
     it("can delete a game", async () => {
