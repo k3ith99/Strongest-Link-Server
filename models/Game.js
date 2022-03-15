@@ -1,3 +1,5 @@
+const axios = require("axios");
+const db = require("../dbConfig");
 const gamesData = [];
 
 class Game {
@@ -35,7 +37,9 @@ class Game {
         return new Promise(async (resolve, reject) => {
             try {
                 // db request to get scores
-                resolve(1);
+                const highscores = await db.query("SELECT * FROM highscores ORDER BY highscore DESC;");
+                if(!highscores) throw new Error("Could not get highscores.");
+                resolve(highscores.rows);
             } catch (err) {
                 reject(err);
             }
@@ -58,10 +62,12 @@ class Game {
                     host,
                     players: [host],
                     questions: null,
+                    token: null,
                     currentQuestion: 0,
                     scores: {},
                     turn: 0,
-                    round: 0
+                    round: 0,
+                    active: false
                 };
 
                 gamesData.push(newGame);
@@ -76,10 +82,39 @@ class Game {
         this.options = newOptions;
     }
 
+    getToken(){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const { data } = await axios.get("https://opentdb.com/api_token.php?command=request");
+                if(data.response_code !== 0) throw new Error("Couldn't generate session token.");
+                resolve(data.token);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    getQuestions(amount){
+        return new Promise(async (resolve, reject) => {
+            try {
+                if(!this.token) throw new Error("Couldn't get trivia data (missing token).");
+                const { data } = await axios.get(`https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}`);
+                if(data.response_code !== 0) throw new Error("Couldn't get trivia data.");
+                resolve(data.results);
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
     startGame(){
         return new Promise(async (resolve, reject) => {
             try {
                 // trivia api request
+                this.token = await this.getToken();
+                this.questions = await this.getQuestions(this.players.length * this.options.totalRounds);
+
+                this.currentQuestion = 0;
                 this.turn = 0;
                 this.round = 0;
                 resolve(this);
@@ -92,7 +127,11 @@ class Game {
     joinGame(user){
         return new Promise(async (resolve, reject) => {
             try {
-                //get more questions from trivia db
+                if(this.active){
+                    //get more questions from trivia db
+                    const newQuestions = await this.getQuestions(this.options.totalRounds);
+                    this.questions = [...this.questions, ...newQuestions];
+                }
                 this.players.push(user);
             } catch (err) {
                 reject(err);
@@ -117,10 +156,35 @@ class Game {
                 if(this.round > this.options.totalRounds) gameEnd = true;
                 if(gameEnd) {
                     // send scores to DB
+                    await this.updateScores();
                 } else {
                     this.currentQuestion += 1;
                 }
                 resolve({ gameEnd, correct });
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    updateScores(){
+        return new Promise(async (resolve, reject) => {
+            try {
+                const highscores = await db.query("SELECT * FROM highscores;");
+                for(const user in this.scores){
+                    const score = this.scores[user];
+                    if(score > 0) {
+                        const userRow = highscores.rows.find(row => row.name === user);
+                        if(userRow){
+                            if(score > userRow.highscore){
+                                await db.query("UPDATE highscores SET highscore=$1 WHERE name=$2", [score, user]);
+                            }
+                        } else {
+                            await db.query("INSERT INTO highscores (name, highscore) VALUES ($1, $2)", [user, score]);
+                        }
+                    }
+                }
+                resolve("Leaderboards updated.");
             } catch (err) {
                 reject(err);
             }
