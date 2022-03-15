@@ -103,7 +103,7 @@ class Game {
         if (!this.token)
           throw new Error("Couldn't get trivia data (missing token).");
         const { data } = await axios.get(
-          `https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}`
+          `https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}&encode=url3986`
         );
         if (data.response_code !== 0)
           throw new Error("Couldn't get trivia data.");
@@ -153,7 +153,7 @@ class Game {
         let correct = false;
         let gameEnd = false;
         const question = this.questions[this.currentQuestion];
-        if (question.correct_answer === answer) {
+        if (decodeURIComponent(question.correct_answer) === answer) {
           this.scores[user] += 1;
           correct = true;
         }
