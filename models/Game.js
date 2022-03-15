@@ -3,204 +3,223 @@ const db = require("../dbConfig");
 const gamesData = [];
 
 class Game {
-    constructor(data){
-        for(let key in data) {
-            // change this later
-            this[key] = data[key];
+  constructor(data) {
+    for (let key in data) {
+      // change this later
+      this[key] = data[key];
+    }
+  }
+
+  static get all() {
+    return new Promise((resolve, reject) => {
+      try {
+        const games = gamesData.map((game) => new Game(game));
+        resolve(games);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static findById(id) {
+    return new Promise((resolve, reject) => {
+      try {
+        const gameData = gamesData.find((game) => game.id === id);
+        if (!gameData) throw new Error("Game not found.");
+        resolve(new Game(gameData));
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static get leaderboard() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // db request to get scores
+        const highscores = await db.query(
+          "SELECT * FROM highscores ORDER BY highscore DESC;"
+        );
+        if (!highscores) throw new Error("Could not get highscores.");
+        resolve(highscores.rows);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static createGame(name, host, options) {
+    return new Promise((resolve, reject) => {
+      try {
+        const nameExists = !!gamesData.find((game) => game.name === name);
+        if (nameExists) throw new Error("Sorry that room name is taken.");
+
+        const maxId = Math.max(...gamesData.map((game) => game.id));
+        const newId = maxId < 0 ? 0 : maxId + 1;
+
+        const newGame = {
+          id: newId,
+          name,
+          options,
+          host,
+          players: [host],
+          questions: null,
+          token: null,
+          currentQuestion: 0,
+          scores: {},
+          turn: 0,
+          round: 0,
+          active: false
+        };
+
+        gamesData.push(newGame);
+        resolve(new Game(newGame));
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  updateOptions(newOptions) {
+    this.options = newOptions;
+  }
+
+  getToken() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const { data } = await axios.get(
+          "https://opentdb.com/api_token.php?command=request"
+        );
+        if (data.response_code !== 0)
+          throw new Error("Couldn't generate session token.");
+        resolve(data.token);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  getQuestions(amount) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (!this.token)
+          throw new Error("Couldn't get trivia data (missing token).");
+        const { data } = await axios.get(
+          `https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}`
+        );
+        if (data.response_code !== 0)
+          throw new Error("Couldn't get trivia data.");
+        resolve(data.results);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  startGame() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // trivia api request
+        this.token = await this.getToken();
+        this.questions = await this.getQuestions(
+          this.players.length * this.options.totalRounds
+        );
+
+        this.currentQuestion = 0;
+        this.turn = 0;
+        this.round = 0;
+        resolve(this);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  joinGame(user) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (this.active) {
+          //get more questions from trivia db
+          const newQuestions = await this.getQuestions(
+            this.options.totalRounds
+          );
+          this.questions = [...this.questions, ...newQuestions];
         }
-    }
+        this.players.push(user);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 
-    static get all() {
-        return new Promise((resolve, reject) => {
-            try {
-                const games = gamesData.map(game => new Game(game));
-                resolve(games);
-            } catch (err) {
-                reject(err);
+  makeTurn(user, answer) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (players[turn] !== user) throw new Error("It's not your turn.");
+        let correct = false;
+        let gameEnd = false;
+        const question = this.questions[this.currentQuestion];
+        if (question.correct_answer === answer) {
+          this.scores[user] += 1;
+          correct = true;
+        }
+        this.turn += 1;
+        this.turn %= this.players.length;
+        if (this.turn === 0) this.round += 1;
+        if (this.round > this.options.totalRounds) gameEnd = true;
+        if (gameEnd) {
+          // send scores to DB
+          await this.updateScores();
+        } else {
+          this.currentQuestion += 1;
+        }
+        resolve({ gameEnd, correct });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  updateScores() {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const highscores = await db.query("SELECT * FROM highscores;");
+        for (const user in this.scores) {
+          const score = this.scores[user];
+          if (score > 0) {
+            const userRow = highscores.rows.find((row) => row.name === user);
+            if (userRow) {
+              if (score > userRow.highscore) {
+                await db.query(
+                  "UPDATE highscores SET highscore=$1 WHERE name=$2",
+                  [score, user]
+                );
+              }
+            } else {
+              await db.query(
+                "INSERT INTO highscores (name, highscore) VALUES ($1, $2)",
+                [user, score]
+              );
             }
-        });
-    }
+          }
+        }
+        resolve("Leaderboards updated.");
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 
-    static findById(id) {
-        return new Promise((resolve, reject) => {
-            try {
-                const gameData = gamesData.find(game => game.id === id);
-                if(!gameData) throw new Error("Game not found.");
-                resolve(new Game(gameData));
-            } catch (err) {
-                reject(err);
-            }
-        });
-    };
-
-    static get leaderboard() {
-        return new Promise(async (resolve, reject) => {
-            try {
-                // db request to get scores
-                const highscores = await db.query("SELECT * FROM highscores ORDER BY highscore DESC;");
-                if(!highscores) throw new Error("Could not get highscores.");
-                resolve(highscores.rows);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    static createGame(name, host, options){
-        return new Promise((resolve, reject) => {
-            try {
-                const nameExists = !!gamesData.find(game => game.name === name);
-                if(nameExists) throw new Error("Sorry that room name is taken.");
-
-                const maxId = Math.max(...gamesData.map(game => game.id));
-                const newId = maxId < 0 ? 0 : maxId + 1;
-
-                const newGame = {
-                    id: newId,
-                    name,
-                    options,
-                    host,
-                    players: [host],
-                    questions: null,
-                    token: null,
-                    currentQuestion: 0,
-                    scores: {},
-                    turn: 0,
-                    round: 0,
-                    active: false
-                };
-
-                gamesData.push(newGame);
-                resolve(new Game(newGame));
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    updateOptions(newOptions){
-        this.options = newOptions;
-    }
-
-    getToken(){
-        return new Promise(async (resolve, reject) => {
-            try {
-                const { data } = await axios.get("https://opentdb.com/api_token.php?command=request");
-                if(data.response_code !== 0) throw new Error("Couldn't generate session token.");
-                resolve(data.token);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    getQuestions(amount){
-        return new Promise(async (resolve, reject) => {
-            try {
-                if(!this.token) throw new Error("Couldn't get trivia data (missing token).");
-                const { data } = await axios.get(`https://opentdb.com/api.php?amount=${amount}&category=${this.options.category}&difficulty=${this.options.level}&type=multiple&token=${this.token}`);
-                if(data.response_code !== 0) throw new Error("Couldn't get trivia data.");
-                resolve(data.results);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    startGame(){
-        return new Promise(async (resolve, reject) => {
-            try {
-                // trivia api request
-                this.token = await this.getToken();
-                this.questions = await this.getQuestions(this.players.length * this.options.totalRounds);
-
-                this.currentQuestion = 0;
-                this.turn = 0;
-                this.round = 0;
-                resolve(this);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-    
-    joinGame(user){
-        return new Promise(async (resolve, reject) => {
-            try {
-                if(this.active){
-                    //get more questions from trivia db
-                    const newQuestions = await this.getQuestions(this.options.totalRounds);
-                    this.questions = [...this.questions, ...newQuestions];
-                }
-                this.players.push(user);
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    makeTurn(user, answer) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if(players[turn] !== user) throw new Error("It's not your turn.");
-                let correct = false;
-                let gameEnd = false;
-                const question = this.questions[this.currentQuestion];
-                if(question.correct_answer === answer){
-                    this.scores[user] += 1;
-                    correct = true;
-                }
-                this.turn += 1;
-                this.turn %= this.players.length;
-                if(this.turn === 0) this.round += 1;
-                if(this.round > this.options.totalRounds) gameEnd = true;
-                if(gameEnd) {
-                    // send scores to DB
-                    await this.updateScores();
-                } else {
-                    this.currentQuestion += 1;
-                }
-                resolve({ gameEnd, correct });
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    updateScores(){
-        return new Promise(async (resolve, reject) => {
-            try {
-                const highscores = await db.query("SELECT * FROM highscores;");
-                for(const user in this.scores){
-                    const score = this.scores[user];
-                    if(score > 0) {
-                        const userRow = highscores.rows.find(row => row.name === user);
-                        if(userRow){
-                            if(score > userRow.highscore){
-                                await db.query("UPDATE highscores SET highscore=$1 WHERE name=$2", [score, user]);
-                            }
-                        } else {
-                            await db.query("INSERT INTO highscores (name, highscore) VALUES ($1, $2)", [user, score]);
-                        }
-                    }
-                }
-                resolve("Leaderboards updated.");
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
-
-    delete(){
-        return new Promise((resolve, reject) => {
-            try {
-                const index = gamesData(game => game.id === this.id);
-                if(index < 0) throw new Error("Game no longer exists.");
-                gamesData.splice(index, 1);
-                resolve("Game successfully deleted.");
-            } catch (err) {
-                reject(err);
-            }
-        });
-    }
+  delete() {
+    return new Promise((resolve, reject) => {
+      try {
+        const index = gamesData((game) => game.id === this.id);
+        if (index < 0) throw new Error("Game no longer exists.");
+        gamesData.splice(index, 1);
+        resolve("Game successfully deleted.");
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 }
