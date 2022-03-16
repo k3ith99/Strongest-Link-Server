@@ -24,7 +24,7 @@ class Game {
   static findById(id) {
     return new Promise((resolve, reject) => {
       try {
-        const gameData = gamesData.find((game) => game.id === id);
+        const gameData = gamesData.find((game) => game.id == id);
         if (!gameData) throw new Error("Game not found.");
         resolve(new Game(gameData));
       } catch (err) {
@@ -70,8 +70,9 @@ class Game {
           active: false
         };
 
-        gamesData.push(newGame);
-        resolve(new Game(newGame));
+        const response = new Game(newGame);
+        gamesData.push(response);
+        resolve(response);
       } catch (err) {
         reject(err);
       }
