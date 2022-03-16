@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-const express = require("express");
-const router = express.Router();
-const Game = require("../models/Game");
-=======
 const Game = require("../Models/Game");
->>>>>>> 50fd43af268ba6a3ddf64a4f2f0565badf75d359
 
 //get leaderboard
 async function leaderboard(req, res) {
@@ -87,5 +81,10 @@ async function deleteGame(req, res) {
 }
 
 module.exports = {
-  leaderboard, index, create, join, restart, deleteGame
+  leaderboard,
+  index,
+  create,
+  join,
+  restart,
+  deleteGame
 };
