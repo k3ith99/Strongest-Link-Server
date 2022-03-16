@@ -24,7 +24,6 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   socket.on("startgame", async ({ lobbyName, roomId }) => {
-    console.log(lobbyName, roomId);
     const game = await gameController.startGame(roomId);
     io.to(lobbyName).emit("game", game);
   });
