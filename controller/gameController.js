@@ -37,9 +37,9 @@ async function create(req, res) {
 async function join(req, res) {
   let errorStatus;
   try {
-    const gameId = parseInt(req.params.id);
+    const gameName = req.params.name;
     errorStatus = 404;
-    const game = await Game.findById(gameId);
+    const game = await Game.findByName(gameName);
 
     errorStatus = 500;
     await game.joinGame(req.body.username);
@@ -75,7 +75,7 @@ async function deleteGame(req, res) {
     errorStatus = 500;
     await game.delete();
 
-    res.status(204).send();
+    res.status(204);
   } catch (err) {
     res.status(errorStatus).json(err);
   }
