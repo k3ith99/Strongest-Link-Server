@@ -27,17 +27,22 @@ io.on("connection", (socket) => {
     const game = await gameController.startGame(roomId);
     io.to(lobbyName).emit("game", game);
   });
+
+  socket.on("setusername", (username) => {
+    socket.username = username;
+  });
+
   socket.on("joinroom", (lobbyName) => {
     socket.join(`${lobbyName}`);
     io.to(lobbyName).emit("game", "sup");
   });
-  socket.on("answer", (user, answer) => {
-    const response = gameController.makeTurn(
-      socket.adapter.rooms[0],
-      user,
+
+  socket.on("answer", async ({ roomId, answer }) => {
+    const response = await gameController.makeTurn(
+      roomId,
+      socket.username,
       answer
     );
-    console.log(response);
     io.emit("response", { response });
   });
 });
