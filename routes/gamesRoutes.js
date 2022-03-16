@@ -6,6 +6,7 @@ const gameController = require("../controller/gameController");
 router.get("/leaderboard", gameController.leaderboard);
 
 router.get("/", gameController.index);
+router.get("/:id", gameController.show);
 router.post("/", gameController.create);
 router.post("/:id", gameController.join);
 router.post("/:id/restart", gameController.restart);

@@ -20,6 +20,15 @@ async function index(req, res) {
   }
 }
 
+async function show(req, res) {
+  try {
+    const game = await Game.findById(req.params.id);
+    res.status(200).json(game);
+  } catch (err) {
+    res.status(404).json(err);
+  }
+}
+
 //create lobby
 async function create(req, res) {
   try {
@@ -100,6 +109,7 @@ function startGame(room) {
 module.exports = {
   leaderboard,
   index,
+  show,
   create,
   join,
   restart,
