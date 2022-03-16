@@ -20,6 +20,18 @@ class Game {
     });
   }
 
+  static findByName(name) {
+    return new Promise((resolve, reject) => {
+      try {
+        const game = gamesData.find((game) => game.name == name);
+        if (!game) throw new Error("Game not found.");
+        resolve(game);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
   static findById(id) {
     return new Promise((resolve, reject) => {
       try {

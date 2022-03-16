@@ -1,4 +1,4 @@
-const Game = require("../Models/Game");
+const Game = require("../models/Game");
 
 //get leaderboard
 async function leaderboard(req, res) {
@@ -17,6 +17,15 @@ async function index(req, res) {
     res.status(200).json(games);
   } catch (err) {
     res.status(500).json(err);
+  }
+}
+
+async function show(req, res) {
+  try {
+    const game = await Game.findByName(req.params.name);
+    res.status(200).json(game);
+  } catch (err) {
+    res.status(404).json(err);
   }
 }
 
@@ -100,6 +109,7 @@ function startGame(room) {
 module.exports = {
   leaderboard,
   index,
+  show,
   create,
   join,
   restart,
