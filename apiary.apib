@@ -1,11 +1,30 @@
 FORMAT: 1A
-HOST: https://polls.apiblueprint.org/
+HOST: https://strongest-link.herokuapp.com/
 
 # Strongest-Link 
 
 Allow users to play a socketed quiz game
+## Leaderboard [/leaderboard]
 
-## Games Collection [/questions]
+### Get Score Leaderboard [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id":"0",
+                "name":"ron"
+                "highscore":12
+            },
+            {
+                "id":"1",
+                "name":"waylon"
+                "highscore":11
+            }
+            
+        ]
+
+## Games Collection [/games]
 
 ### List All Game rooms [GET]
 
@@ -13,25 +32,25 @@ Allow users to play a socketed quiz game
 
         [
             {
-  "id": 0,
-  "name": "gametwo",
-  "options": {
-    "category": 9,
-    "level": "medium",
-    "totalQuestions": 12
-  },
-  "host": "ron",
-  "players": [
-    "ron"
-  ],
-  "questions": null,
-  "token": null,
-  "currentQuestion": 0,
-  "scores": {
-
-  },
-  "active": false
-}
+              "id": 0,
+              "name": "gametwo",
+              "options": {
+                "category": 9,
+                "level": "medium",
+                "totalQuestions": 12
+              },
+              "host": "ron",
+              "players": [
+                "ron"
+              ],
+              "questions": null,
+              "token": null,
+              "currentQuestion": 0,
+              "scores": {
+            
+              },
+              "active": false
+            }
         ]
 
 ### Create a New Game room [POST]
@@ -40,35 +59,70 @@ Allow users to play a socketed quiz game
 + Request (application/json)
 
         {
-  "name":"gametwo",
-  "host":"ron",
-  "options":{"category":9,"level":"medium","totalQuestions":12}
-}
+          "name":"gametwo",
+          "host":"ron",
+          "options":{"category":9,"level":"medium","totalQuestions":12}
+        }
 
 + Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
 
     + Body
 
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
-                    }
-                ]
+              "id": 0,
+              "name": "gametwo",
+              "options": {
+                "category": 9,
+                "level": "medium",
+                "totalQuestions": 12
+              },
+              "host": "ron",
+              "players": [
+                "ron"
+              ],
+              "questions": null,
+              "token": null,
+              "currentQuestion": 0,
+              "scores": {
+            
+              },
+              "active": false
             }
+
+### Join a Game room [POST /:id]
+
+
++ Request (application/json)
+
+        {
+            "username":"waylon"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+              "id": 0,
+              "name": "gametwo",
+              "options": {
+                "category": 9,
+                "level": "medium",
+                "totalQuestions": 12
+              },
+              "host": "ron",
+              "players": [
+                "ron", "waylon"
+              ],
+              "questions": null,
+              "token": null,
+              "currentQuestion": 0,
+              "scores": {
+            
+              },
+              "active": false
+            }
+            
+### Delete a game [DELETE /:id]
+
++ Response 204 (application/json)
