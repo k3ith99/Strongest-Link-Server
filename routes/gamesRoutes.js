@@ -6,9 +6,9 @@ const gameController = require("../controller/gameController");
 router.get("/leaderboard", gameController.leaderboard);
 
 router.get("/", gameController.index);
+router.get("/:id/restart", gameController.restart);
 router.post("/", gameController.create);
-router.post("/:id", gameController.join);
-router.post("/:id/restart", gameController.restart);
+router.post("/:name", gameController.join);
 router.delete("/:id", gameController.deleteGame);
 
 module.exports = router;
