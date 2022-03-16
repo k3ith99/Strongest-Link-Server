@@ -13,8 +13,19 @@ class Game {
   static get all() {
     return new Promise((resolve, reject) => {
       try {
-        const games = gamesData.map((game) => new Game(game));
-        resolve(games);
+        resolve(gamesData);
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  static findByName(name) {
+    return new Promise((resolve, reject) => {
+      try {
+        const game = gamesData.find((game) => game.name == name);
+        if (!game) throw new Error("Game not found.");
+        resolve(game);
       } catch (err) {
         reject(err);
       }
@@ -24,9 +35,9 @@ class Game {
   static findById(id) {
     return new Promise((resolve, reject) => {
       try {
-        const gameData = gamesData.find((game) => game.id === id);
-        if (!gameData) throw new Error("Game not found.");
-        resolve(new Game(gameData));
+        const game = gamesData.find((game) => game.id == id);
+        if (!game) throw new Error("Game not found.");
+        resolve(game);
       } catch (err) {
         reject(err);
       }
@@ -70,8 +81,9 @@ class Game {
           active: false
         };
 
-        gamesData.push(newGame);
-        resolve(new Game(newGame));
+        const response = new Game(newGame);
+        gamesData.push(response);
+        resolve(response);
       } catch (err) {
         reject(err);
       }

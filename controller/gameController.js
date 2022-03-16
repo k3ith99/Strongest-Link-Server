@@ -1,4 +1,4 @@
-const Game = require("../Models/Game");
+const Game = require("../models/Game");
 
 //get leaderboard
 async function leaderboard(req, res) {
@@ -20,6 +20,15 @@ async function index(req, res) {
   }
 }
 
+async function show(req, res) {
+  try {
+    const game = await Game.findByName(req.params.name);
+    res.status(200).json(game);
+  } catch (err) {
+    res.status(404).json(err);
+  }
+}
+
 //create lobby
 async function create(req, res) {
   try {
@@ -37,8 +46,9 @@ async function create(req, res) {
 async function join(req, res) {
   let errorStatus;
   try {
+    const gameName = req.params.name;
     errorStatus = 404;
-    const game = await Game.findById(req.params.id);
+    const game = await Game.findByName(gameName);
 
     errorStatus = 500;
     await game.joinGame(req.body.username);
@@ -74,12 +84,36 @@ async function deleteGame(req, res) {
     errorStatus = 500;
     await game.delete();
 
-    res.status(204).send();
+    res.status(204);
   } catch (err) {
     res.status(errorStatus).json(err);
   }
 }
 
+function makeTurn(room, user, answer) {
+  return new Promise(async (res, rej) => {
+    const game = await Game.findById(room);
+    const response = await game.makeTurn(user, answer);
+    res(response);
+  });
+}
+
+function startGame(room) {
+  return new Promise(async (res, rej) => {
+    const game = await Game.findById(room);
+    await game.startGame();
+    res(game);
+  });
+}
+
 module.exports = {
-  leaderboard, index, create, join, restart, deleteGame
+  leaderboard,
+  index,
+  show,
+  create,
+  join,
+  restart,
+  deleteGame,
+  startGame,
+  makeTurn
 };

@@ -1,0 +1,128 @@
+FORMAT: 1A
+HOST: https://strongest-link.herokuapp.com/
+
+# Strongest-Link 
+
+Allow users to play a socketed quiz game
+## Leaderboard [/leaderboard]
+
+### Get Score Leaderboard [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+                "id":"0",
+                "name":"ron"
+                "highscore":12
+            },
+            {
+                "id":"1",
+                "name":"waylon"
+                "highscore":11
+            }
+            
+        ]
+
+## Games Collection [/games]
+
+### List All Game rooms [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+              "id": 0,
+              "name": "gametwo",
+              "options": {
+                "category": 9,
+                "level": "medium",
+                "totalQuestions": 12
+              },
+              "host": "ron",
+              "players": [
+                "ron"
+              ],
+              "questions": null,
+              "token": null,
+              "currentQuestion": 0,
+              "scores": {
+            
+              },
+              "active": false
+            }
+        ]
+
+### Create a New Game room [POST]
+
+
++ Request (application/json)
+
+        {
+          "name":"gametwo",
+          "host":"ron",
+          "options":{"category":9,"level":"medium","totalQuestions":12}
+        }
+
++ Response 201 (application/json)
+
+    + Body
+
+            {
+              "id": 0,
+              "name": "gametwo",
+              "options": {
+                "category": 9,
+                "level": "medium",
+                "totalQuestions": 12
+              },
+              "host": "ron",
+              "players": [
+                "ron"
+              ],
+              "questions": null,
+              "token": null,
+              "currentQuestion": 0,
+              "scores": {
+            
+              },
+              "active": false
+            }
+
+### Join a Game room [POST /:id]
+
+
++ Request (application/json)
+
+        {
+            "username":"waylon"
+        }
+
++ Response 200 (application/json)
+
+    + Body
+
+            {
+              "id": 0,
+              "name": "gametwo",
+              "options": {
+                "category": 9,
+                "level": "medium",
+                "totalQuestions": 12
+              },
+              "host": "ron",
+              "players": [
+                "ron", "waylon"
+              ],
+              "questions": null,
+              "token": null,
+              "currentQuestion": 0,
+              "scores": {
+            
+              },
+              "active": false
+            }
+            
+### Delete a game [DELETE /:id]
+
++ Response 204 (application/json)
