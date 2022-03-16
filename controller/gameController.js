@@ -37,8 +37,9 @@ async function create(req, res) {
 async function join(req, res) {
   let errorStatus;
   try {
+    const gameId = parseInt(req.params.id);
     errorStatus = 404;
-    const game = await Game.findById(req.params.id);
+    const game = await Game.findById(gameId);
 
     errorStatus = 500;
     await game.joinGame(req.body.username);
@@ -78,6 +79,17 @@ async function deleteGame(req, res) {
   } catch (err) {
     res.status(errorStatus).json(err);
   }
+}
+
+async function makeTurn(room, user, answer) {
+  const game = await Game.findById(room);
+  const response = await game.makeTurn(user, answer);
+  return response;
+}
+
+async function startGame(room) {
+  const game = await Game.findById(room);
+  await game.startGame();
 }
 
 module.exports = {
