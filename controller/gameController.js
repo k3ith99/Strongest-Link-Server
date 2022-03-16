@@ -81,10 +81,12 @@ async function deleteGame(req, res) {
   }
 }
 
-async function makeTurn(room, user, answer) {
-  const game = await Game.findById(room);
-  const response = await game.makeTurn(user, answer);
-  return response;
+function makeTurn(room, user, answer) {
+  return new Promise(async (res, rej) => {
+    const game = await Game.findById(room);
+    const response = await game.makeTurn(user, answer);
+    res(response);
+  });
 }
 
 function startGame(room) {
