@@ -38,7 +38,7 @@ class Game {
       try {
         // db request to get scores
         const highscores = await db.query(
-          "SELECT * FROM highscores ORDER BY highscore DESC;"
+          "SELECT * FROM highscores ORDER BY highscore DESC"
         );
         if (!highscores) throw new Error("Could not get highscores.");
         resolve(highscores.rows);
@@ -139,6 +139,7 @@ class Game {
     return new Promise(async (resolve, reject) => {
       try {
         this.players.push(user);
+        resolve(this);
       } catch (err) {
         reject(err);
       }
@@ -173,7 +174,7 @@ class Game {
   updateScores() {
     return new Promise(async (resolve, reject) => {
       try {
-        const highscores = await db.query("SELECT * FROM highscores;");
+        const highscores = await db.query("SELECT * FROM highscores");
         for (const user in this.scores) {
           const score = this.scores[user];
           if (score > 0) {

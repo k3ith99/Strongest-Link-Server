@@ -9,7 +9,8 @@ const io = require("socket.io")(server, {
   }
 });
 global.io = io;
-const gameRoutes = require("./controller/gameController");
+
+const gameRoutes = require("./routes/gamesRoutes");
 
 app.use(cors());
 app.use(express.json());
