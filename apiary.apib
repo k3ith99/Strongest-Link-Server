@@ -1,0 +1,74 @@
+FORMAT: 1A
+HOST: https://polls.apiblueprint.org/
+
+# Strongest-Link 
+
+Allow users to play a socketed quiz game
+
+## Games Collection [/questions]
+
+### List All Game rooms [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+  "id": 0,
+  "name": "gametwo",
+  "options": {
+    "category": 9,
+    "level": "medium",
+    "totalQuestions": 12
+  },
+  "host": "ron",
+  "players": [
+    "ron"
+  ],
+  "questions": null,
+  "token": null,
+  "currentQuestion": 0,
+  "scores": {
+
+  },
+  "active": false
+}
+        ]
+
+### Create a New Game room [POST]
+
+
++ Request (application/json)
+
+        {
+  "name":"gametwo",
+  "host":"ron",
+  "options":{"category":9,"level":"medium","totalQuestions":12}
+}
+
++ Response 201 (application/json)
+
+    + Headers
+
+            Location: /questions/2
+
+    + Body
+
+            {
+                "question": "Favourite programming language?",
+                "published_at": "2015-08-05T08:40:51.620Z",
+                "choices": [
+                    {
+                        "choice": "Swift",
+                        "votes": 0
+                    }, {
+                        "choice": "Python",
+                        "votes": 0
+                    }, {
+                        "choice": "Objective-C",
+                        "votes": 0
+                    }, {
+                        "choice": "Ruby",
+                        "votes": 0
+                    }
+                ]
+            }
