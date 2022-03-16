@@ -22,7 +22,7 @@ async function index(req, res) {
 
 async function show(req, res) {
   try {
-    const game = await Game.findById(req.params.id);
+    const game = await Game.findByName(req.params.name);
     res.status(200).json(game);
   } catch (err) {
     res.status(404).json(err);
