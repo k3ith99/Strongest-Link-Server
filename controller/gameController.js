@@ -87,9 +87,12 @@ async function makeTurn(room, user, answer) {
   return response;
 }
 
-async function startGame(room) {
-  const game = await Game.findById(room);
-  await game.startGame();
+function startGame(room) {
+  return new Promise(async (res, rej) => {
+    const game = await Game.findById(room);
+    await game.startGame();
+    res(game);
+  });
 }
 
 module.exports = {
@@ -98,5 +101,7 @@ module.exports = {
   create,
   join,
   restart,
-  deleteGame
+  deleteGame,
+  startGame,
+  makeTurn
 };
